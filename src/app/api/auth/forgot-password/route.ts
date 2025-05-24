@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
     // Send reset email
     const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`;
-    
+
     await resend.emails.send({
       from: "onboarding@resend.dev",
       to: email,
