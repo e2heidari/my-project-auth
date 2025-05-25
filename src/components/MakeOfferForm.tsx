@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 interface OfferFormData {
   goal: string;
@@ -8,6 +12,8 @@ interface OfferFormData {
   productOrService: string;
   customMessage?: string;
   category: string;
+  startDate: dayjs.Dayjs | null;
+  endDate: dayjs.Dayjs | null;
 }
 
 export default function MakeOfferForm() {
@@ -22,6 +28,8 @@ export default function MakeOfferForm() {
     productOrService: "",
     customMessage: "",
     category: "",
+    startDate: null,
+    endDate: null,
   });
 
   // Load saved offer from localStorage on component mount
@@ -46,7 +54,9 @@ export default function MakeOfferForm() {
         !formData.goal ||
         !formData.discountType ||
         !formData.productOrService ||
-        !formData.category
+        !formData.category ||
+        !formData.startDate ||
+        !formData.endDate
       ) {
         setError("لطفاً تمام فیلدهای ضروری را پر کنید");
         return;
@@ -66,6 +76,8 @@ export default function MakeOfferForm() {
           productOrService: formData.productOrService,
           category: formData.category,
           customMessage: formData.customMessage,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
         }),
       });
 
@@ -126,7 +138,7 @@ export default function MakeOfferForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
         Create Your Offer ✨
       </h1>
@@ -238,6 +250,61 @@ export default function MakeOfferForm() {
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Offer Start Date
+              </label>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={formData.startDate}
+                  onChange={(date) =>
+                    setFormData({ ...formData, startDate: date })
+                  }
+                  minDate={dayjs()}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      placeholder: "Select start date",
+                      className:
+                        "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </div>
+            <div>
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Offer End Date
+              </label>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={formData.endDate}
+                  onChange={(date) =>
+                    setFormData({ ...formData, endDate: date })
+                  }
+                  minDate={formData.startDate || dayjs()}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      placeholder: "Select end date",
+                      className:
+                        "w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
@@ -272,9 +339,22 @@ export default function MakeOfferForm() {
             ) : (
               <>
                 <div className="prose max-w-none">
-                  <p className="whitespace-pre-wrap text-gray-700">
-                    {generatedOffer}
-                  </p>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-2 rounded-lg">
+                    <div className="flex flex-col items-end py-2" dir="rtl">
+                      {generatedOffer
+                        .split("\n")
+                        .filter((line) => line.trim())
+                        .map((line, index) => (
+                          <p
+                            key={index}
+                            className={`${index === 0 ? "text-xl md:text-2xl font-bold  px-2 font-vazirmatn text-indigo-900" : "text-lg md:text-xl leading-relaxed w-full px-2 font-vazirmatn text-gray-700"} `}
+                            style={{ unicodeBidi: "bidi-override" }}
+                          >
+                            {line.trim()}
+                          </p>
+                        ))}
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-4 flex gap-4">
                   <button

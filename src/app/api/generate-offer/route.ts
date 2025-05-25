@@ -87,47 +87,120 @@ async function generateOfferFromOpenAI({
   productOrService: string;
   customMessage?: string;
 }): Promise<string> {
-  const prompt = `Create a simple, clear marketing offer in formal Farsi (Persian) for:
+  const prompt = `Create a marketing offer in formal Farsi (Persian) for:
 - Product/Service: ${productOrService}
 - Offer: ${discountType}
 ${customMessage ? `- Additional Info: ${customMessage}` : ''}
 
 Requirements:
-1. Write in simple, clear Farsi (Persian)
-2. Follow Persian typography rules:
+1. Structure the offer in EXACTLY this format with line breaks (use \n for line breaks):
+   First line: Title with discount/offer (e.g., "تخفیف 30% محصولات")
+   Second line: Explanation (e.g., "با خرید هر محصول، یک هدیه رایگان دریافت کنید")
+   Optional third line: Time limit (e.g., "فقط تا پایان هفته")
+
+Example format (with \n for line breaks):
+تخفیف 30% محصولات\n
+با خرید هر محصول، یک هدیه رایگان دریافت کنید\n
+فقط تا پایان هفته
+
+2. Write in simple, clear Farsi (Persian)
+3. Follow Persian typography rules:
    - Proper spacing around punctuation
    - Correct use of Persian quotation marks
    - Use English numbers (0,1,2,3,4,5,6,7,8,9) for all numbers and percentages
-3. Keep it to 2 lines maximum
-4. Include relevant emojis
-5. Follow this structure:
-   - First line: Simple offer title
-   - Second line: Clear offer details with numbers/dates
-6. Use simple, direct language
-7. Include only:
+   - Place punctuation marks at the end of sentences
+4. DO NOT include any hashtags (#) in the text
+5. Use simple, direct language
+6. Include only:
    - What is being offered
    - The discount or special price
    - Time limit (if any)
-8. Avoid:
+7. Avoid:
    - Marketing jargon
    - Business strategy terms
    - Complex language
    - English words
-9. IMPORTANT: Use English numbers (0-9) for all numbers and percentages
-10. Make it suitable for social media
-11. Use proper Persian word spacing
-12. Format numbers and percentages in English format (e.g., 20% not ۲۰٪)
-13. Do not include any RTL/LTR control characters in the text
-14. DO NOT include any business names or locations unless specifically provided
-15. DO NOT include any call to action or contact information
-16. DO NOT include any marketing strategy or business terms`;
+   - Unnecessary prepositions (like "برای")
+   - Hashtags (#)
+8. IMPORTANT: 
+   - Use English numbers (0-9) for all numbers and percentages
+   - Each line MUST be on a separate line
+   - First line MUST be the title with the discount/offer
+   - MUST use \n for line breaks
+   - Place punctuation marks at the end of sentences
+   - Keep sentences short and direct
+   - DO NOT use hashtags (#)
+9. Make it suitable for social media but WITHOUT hashtags
+10. Use proper Persian word spacing
+11. Format numbers and percentages in English format (e.g., 20% not ۲۰٪)
+12. Do not include any RTL/LTR control characters in the text
+13. DO NOT include any business names or locations unless specifically provided
+14. DO NOT include any call to action or contact information
+15. DO NOT include any marketing strategy or business terms
+16. DO NOT include any hashtags (#)
+17. Persian Sentence Structure Rules:
+    - Use proper Persian grammar and word order
+    - Keep sentences short and focused
+    - Make sure each line is easy to understand
+    - Use natural Persian expressions
+    - Avoid complex sentence structures
+    - Ensure proper subject-verb agreement
+    - Use appropriate Persian prepositions
+    - Maintain consistent formality level
+    - Place punctuation marks at the end of sentences
+    - Avoid unnecessary words and prepositions
+    - DO NOT use hashtags (#)
+
+Examples of good and bad sentence structures:
+
+Good examples:
+- "تخفیف 30% محصولات"
+- "با خرید هر محصول، یک هدیه رایگان دریافت کنید"
+- "فقط تا پایان هفته"
+
+Bad examples (DO NOT USE):
+- "تخفیف 30% برای خرید محصولات" (unnecessary preposition)
+- "بر روی محصولات انتخابی با خرید هر محصول" (too complex)
+- "تخفیف ویژه برای محصولات منتخب با شرایط خاص" (too formal and complex)
+- "با توجه به شرایط موجود، تخفیف ویژه برای خرید" (too wordy)
+- "#تخفیف_ویژه" (hashtags not allowed)
+
+Remember:
+- Keep sentences short and direct
+- Use simple Persian structures
+- Avoid unnecessary words and prepositions
+- Make it easy to understand at first glance
+- MUST use \n for line breaks
+- First line MUST be the title
+- Place punctuation marks at the end of sentences
+- DO NOT use hashtags (#)`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
-        content: "You are a Farsi (Persian) copywriter. Create simple, clear offers without any marketing jargon or business strategy terms. Focus only on the offer details in plain language."
+        content: `You are a Farsi (Persian) copywriter. Create offers with EXACTLY this structure:
+1. First line: Title with discount/offer (e.g., "تخفیف 30% محصولات")
+2. Second line: Explanation (e.g., "با خرید هر محصول، یک هدیه رایگان دریافت کنید")
+3. Optional third line: Time limit (e.g., "فقط تا پایان هفته")
+
+Important rules:
+- Each line must be on a separate line using \n
+- Use simple, clear Persian sentences
+- Keep each line short and focused
+- Use proper Persian grammar and word order
+- Make sure the offer is easy to understand at first glance
+- Follow all Persian typography and formatting rules
+- Use natural Persian expressions
+- Maintain consistent formality level
+- AVOID complex sentence structures
+- Keep it simple and direct
+- First line MUST be the title
+- MUST use \n for line breaks
+- Place punctuation marks at the end of sentences
+- Avoid unnecessary words and prepositions
+- DO NOT use hashtags (#)`
       },
       {
         role: "user",
