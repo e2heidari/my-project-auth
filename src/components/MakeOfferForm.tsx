@@ -5,6 +5,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import "dayjs/locale/en";
 
 interface OfferFormData {
   goal: string;
@@ -258,13 +259,17 @@ export default function MakeOfferForm() {
               >
                 Offer Start Date
               </label>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="en"
+              >
                 <DatePicker
                   value={formData.startDate}
                   onChange={(date) =>
                     setFormData({ ...formData, startDate: date })
                   }
                   minDate={dayjs()}
+                  format="D MMMM YYYY"
                   slotProps={{
                     textField: {
                       fullWidth: true,
@@ -284,13 +289,17 @@ export default function MakeOfferForm() {
               >
                 Offer End Date
               </label>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="en"
+              >
                 <DatePicker
                   value={formData.endDate}
                   onChange={(date) =>
                     setFormData({ ...formData, endDate: date })
                   }
                   minDate={formData.startDate || dayjs()}
+                  format="D MMMM YYYY"
                   slotProps={{
                     textField: {
                       fullWidth: true,

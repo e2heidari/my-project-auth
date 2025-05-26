@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FiSearch, FiEdit2, FiTrash2 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -22,10 +22,145 @@ interface Advertisement {
   createdAt: string;
 }
 
+interface StatusDropdownProps {
+  value: "active" | "pending" | "completed";
+  onChange: (value: "active" | "pending" | "completed") => void;
+  disabled?: boolean;
+}
+
+function StatusDropdown({ value, onChange, disabled }: StatusDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const statusOptions: {
+    value: "active" | "pending" | "completed";
+    label: string;
+  }[] = [
+    { value: "active", label: "Active" },
+    { value: "pending", label: "Pending" },
+    { value: "completed", label: "Completed" },
+  ];
+
+  return (
+    <div className="relative w-32" ref={dropdownRef}>
+      <button
+        type="button"
+        className="text-sm border rounded px-2 py-1 w-full text-left bg-white text-gray-800"
+        onClick={() => !disabled && setOpen((o) => !o)}
+        disabled={disabled}
+      >
+        {statusOptions.find((opt) => opt.value === value)?.label}
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-0.5 w-full bg-white border rounded shadow-lg z-50">
+          {statusOptions.map((option) => (
+            <div
+              key={option.value}
+              className={`cursor-pointer px-4 py-2 hover:bg-indigo-100 text-gray-800 ${
+                option.value === value ? "font-bold text-indigo-700" : ""
+              }`}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface FilterDropdownProps {
+  value: "active" | "pending" | "completed" | "";
+  onChange: (value: "active" | "pending" | "completed" | "") => void;
+}
+
+function FilterDropdown({ value, onChange }: FilterDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filterOptions: {
+    value: "active" | "pending" | "completed" | "";
+    label: string;
+  }[] = [
+    { value: "", label: "All Status" },
+    { value: "active", label: "Active" },
+    { value: "pending", label: "Pending" },
+    { value: "completed", label: "Completed" },
+  ];
+
+  return (
+    <div className="relative w-40" ref={dropdownRef}>
+      <button
+        type="button"
+        className="text-sm border rounded px-2 py-1 w-full text-left bg-white text-gray-800"
+        onClick={() => setOpen((o) => !o)}
+      >
+        {filterOptions.find((opt) => opt.value === value)?.label}
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-0.5 w-full bg-white border rounded shadow-lg z-50">
+          {filterOptions.map((option) => (
+            <div
+              key={option.value}
+              className={`cursor-pointer px-4 py-2 hover:bg-indigo-100 text-gray-800 ${
+                option.value === value ? "font-bold text-indigo-700" : ""
+              }`}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ManageAds() {
   const [activeTab, setActiveTab] = useState<"offers" | "ads">("offers");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState<
+    "active" | "pending" | "completed" | ""
+  >("");
   const [isLoading, setIsLoading] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([
     {
@@ -185,24 +320,12 @@ export default function ManageAds() {
             className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
           />
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-        >
-          <option value="" className="text-gray-400">
-            All Status
-          </option>
-          <option value="active" className="text-gray-900">
-            Active
-          </option>
-          <option value="pending" className="text-gray-900">
-            Pending
-          </option>
-          <option value="completed" className="text-gray-900">
-            Completed
-          </option>
-        </select>
+        <div className="relative">
+          <FilterDropdown
+            value={filterStatus}
+            onChange={(value) => setFilterStatus(value)}
+          />
+        </div>
       </div>
 
       {/* Items List */}
@@ -238,29 +361,18 @@ export default function ManageAds() {
                     </p>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <select
+                <div className="flex space-x-2 items-center">
+                  <StatusDropdown
                     value={item.status}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       handleStatusChange(
                         activeTab,
                         item.id,
-                        e.target.value as "active" | "pending" | "completed"
+                        value as "active" | "pending" | "completed"
                       )
                     }
-                    className="text-sm border rounded px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                     disabled={isLoading}
-                  >
-                    <option value="active" className="text-gray-900">
-                      Active
-                    </option>
-                    <option value="pending" className="text-gray-900">
-                      Pending
-                    </option>
-                    <option value="completed" className="text-gray-900">
-                      Completed
-                    </option>
-                  </select>
+                  />
                   <button
                     onClick={() => handleEdit()}
                     className="p-1 text-gray-600 hover:text-indigo-600"
