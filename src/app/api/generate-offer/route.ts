@@ -228,7 +228,7 @@ async function generateOfferFromOpenAI({
 
   const prompt = `بیزینسی با موضوع "${productOrService}" در دسته‌بندی ${category} که مربوط به ${typeLabel} است، قصد دارد با هدف "${goal}"، پیشنهادی با نوع تخفیف "${discountType}" از تاریخ ${formattedStartDate} تا ${formattedEndDate} ارائه دهد. ${customMessage ? `جزئیات تکمیلی: ${customMessage}` : ''}
 
-لطفاً یک پیشنهاد جذاب، رسمی و مؤثر در حداکثر ۳ خط بنویس، با توجه به اینکه این مورد مربوط به ${typeLabel} است. از واژگان مرتبط با ${typeLabel} استفاده کن.`;
+لطفاً یک پیشنهاد جذاب، رسمی و مؤثر در حداکثر ۱ خط بنویس، با توجه به اینکه این مورد مربوط به ${typeLabel} است. از واژگان مرتبط با ${typeLabel} استفاده کن.`;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4',
@@ -249,7 +249,9 @@ async function generateOfferFromOpenAI({
   let description = completion.choices[0]?.message?.content?.trim() || '';
   description = fixNumbersAndDiscount(description, discountType);
   description = forceLTRForEnglishMonthsAndNumbers(description);
-  return formatFarsiText(description);
+  description = formatFarsiText(description);
+  description = description.replace(/^"|"$/g, ''); // Remove quotes from start and end
+  return description;
 }
 
 export async function POST(request: Request) {

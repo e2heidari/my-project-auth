@@ -23,15 +23,46 @@ export default function MakeOfferForm() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [formData, setFormData] = useState<OfferFormData>({
-    goal: "",
-    discountType: "",
-    productOrService: "",
-    customMessage: "",
-    category: "",
-    startDate: null,
-    endDate: null,
+  const [formData, setFormData] = useState<OfferFormData>(() => {
+    // Try to load saved form data from localStorage
+    if (typeof window !== "undefined") {
+      const savedFormData = localStorage.getItem("offerFormData");
+      if (savedFormData) {
+        try {
+          const parsed = JSON.parse(savedFormData);
+          // Convert string dates back to dayjs objects
+          return {
+            ...parsed,
+            startDate: parsed.startDate ? dayjs(parsed.startDate) : null,
+            endDate: parsed.endDate ? dayjs(parsed.endDate) : null,
+          };
+        } catch (e) {
+          console.error("Error parsing saved form data:", e);
+        }
+      }
+    }
+    return {
+      goal: "",
+      discountType: "",
+      productOrService: "",
+      customMessage: "",
+      category: "",
+      startDate: null,
+      endDate: null,
+    };
   });
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const dataToSave = {
+        ...formData,
+        startDate: formData.startDate?.toISOString() || null,
+        endDate: formData.endDate?.toISOString() || null,
+      };
+      localStorage.setItem("offerFormData", JSON.stringify(dataToSave));
+    }
+  }, [formData]);
 
   // Load saved offer from localStorage on component mount
   useEffect(() => {
@@ -264,7 +295,7 @@ export default function MakeOfferForm() {
                 adapterLocale="en"
               >
                 <DatePicker
-                  value={formData.startDate}
+                  value={formData.startDate || null}
                   onChange={(date) =>
                     setFormData({ ...formData, startDate: date })
                   }
@@ -294,7 +325,7 @@ export default function MakeOfferForm() {
                 adapterLocale="en"
               >
                 <DatePicker
-                  value={formData.endDate}
+                  value={formData.endDate || null}
                   onChange={(date) =>
                     setFormData({ ...formData, endDate: date })
                   }
@@ -349,14 +380,21 @@ export default function MakeOfferForm() {
               <>
                 <div className="prose max-w-none">
                   <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-2 rounded-lg">
-                    <div className="flex flex-col items-end py-2" dir="rtl">
+                    <div className="flex flex-col items-center mt-2 mb-2">
+                      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-2 py-2 rounded-lg shadow-lg">
+                        <h3 className="text-white text-2xl font-bold text-center font-vazirmatn">
+                          {formData.discountType}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end" dir="rtl">
                       {generatedOffer
                         .split("\n")
                         .filter((line) => line.trim())
                         .map((line, index) => (
                           <p
                             key={index}
-                            className={`${index === 0 ? "text-xl md:text-2xl font-bold  px-2 font-vazirmatn text-indigo-900" : "text-lg md:text-xl leading-relaxed w-full px-2 font-vazirmatn text-gray-700"} `}
+                            className="text-lg md:text-xl leading-relaxed w-full px-4 py-2 font-vazirmatn text-gray-700"
                             style={{ unicodeBidi: "bidi-override" }}
                           >
                             {line.trim()}
