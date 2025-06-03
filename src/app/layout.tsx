@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const vazirmatn = Vazirmatn({
+  subsets: ["arabic"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Authentication System",
-  description: "A secure authentication system built with Next.js",
+  title: "Yelstar",
+  description: "Yelstar - Your Business Directory",
 };
 
 export default function RootLayout({
@@ -17,14 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-          rel="stylesheet"
-          type="text/css"
-        />
-      </head>
-      <body className={`${inter.className} font-vazirmatn`}>
+      <body className={vazirmatn.className} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

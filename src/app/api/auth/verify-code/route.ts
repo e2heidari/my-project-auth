@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   // Add CORS headers
@@ -16,11 +15,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { email, code, newPassword } = await request.json();
+    const { email, code } = await request.json();
 
-    if (!email || !code || !newPassword) {
+    if (!email || !code) {
       return NextResponse.json(
-        { error: 'تمام فیلدها الزامی هستند' },
+        { error: 'ایمیل و کد الزامی هستند' },
         { status: 400, headers }
       );
     }
@@ -43,28 +42,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update user's password
-    await prisma.user.update({
-      where: { email },
-      data: { password: hashedPassword }
-    });
-
-    // Delete the used reset code
-    await prisma.passwordReset.delete({
-      where: { id: resetRequest.id }
-    });
-
     return NextResponse.json({
-      message: 'رمز عبور با موفقیت تغییر کرد'
+      message: 'کد معتبر است'
     }, { headers });
 
   } catch (error) {
-    console.error('Error in reset-password:', error);
+    console.error('Error in verify-code:', error);
     return NextResponse.json(
-      { error: 'خطا در تغییر رمز عبور' },
+      { error: 'خطا در بررسی کد' },
       { status: 500, headers }
     );
   }

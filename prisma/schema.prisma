@@ -50,8 +50,6 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  resetToken    String?   @unique
-  resetTokenExpiry DateTime?
   accounts      Account[]
   sessions      Session[]
   offers        Offer[]
@@ -77,4 +75,14 @@ model Offer {
   updatedAt     DateTime @updatedAt
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
