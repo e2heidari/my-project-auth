@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import logger from "@/lib/logger";
 
 export async function POST(request: Request) {
   // Add CORS headers
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
 
     if (!email || !code) {
       return NextResponse.json(
-        { error: 'ایمیل و کد الزامی هستند' },
+        { error: "Email and code are required" },
         { status: 400, headers }
       );
     }
@@ -30,26 +31,36 @@ export async function POST(request: Request) {
         email,
         code,
         expiresAt: {
-          gt: new Date()
-        }
-      }
+          gt: new Date(),
+        },
+      },
     });
 
     if (!resetRequest) {
       return NextResponse.json(
-        { error: 'کد نامعتبر یا منقضی شده است' },
+        { error: "Invalid or expired code" },
         { status: 400, headers }
       );
     }
 
+    // Log the code verification
+    logger.info("Recovery code verified", {
+      email,
+      timestamp: new Date().toISOString(),
+    });
+
     return NextResponse.json({
-      message: 'کد معتبر است'
+      message: "Code verified successfully"
     }, { headers });
 
   } catch (error) {
-    console.error('Error in verify-code:', error);
+    logger.error("Error in verify-code endpoint", {
+      error,
+      timestamp: new Date().toISOString(),
+    });
+
     return NextResponse.json(
-      { error: 'خطا در بررسی کد' },
+      { error: "Error processing request" },
       { status: 500, headers }
     );
   }

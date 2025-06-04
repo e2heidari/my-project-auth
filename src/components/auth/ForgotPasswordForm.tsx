@@ -1,228 +1,165 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-
-interface ForgotPasswordFormData {
-  email: string;
-  code?: string;
-  newPassword?: string;
-}
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 export default function ForgotPasswordForm() {
-  const [step, setStep] = useState<"email" | "code" | "newPassword">("email");
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [code, setCode] = useState("");
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ForgotPasswordFormData>();
-
-  const onSubmit = async (data: ForgotPasswordFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
     setIsLoading(true);
-    setError("");
-    setMessage("");
 
     try {
       if (step === "email") {
         const response = await fetch("/api/auth/forgot-password", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: data.email }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "Error sending recovery code");
+          throw new Error(data.error || "Error sending request");
         }
 
-        setEmail(data.email);
-        setMessage("Recovery code has been sent to your email");
+        setSuccess(data.message);
         setStep("code");
-      } else if (step === "code") {
+      } else {
+        // Verify the code
         const response = await fetch("/api/auth/verify-code", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            code: data.code,
-          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, code }),
         });
 
-        const result = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "Invalid code");
+          throw new Error(data.error || "Invalid code");
         }
 
-        setStep("newPassword");
-      } else {
-        const response = await fetch("/api/auth/reset-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            code: data.code,
-            newPassword: data.newPassword,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Error changing password");
-        }
-
-        setMessage("Password changed successfully");
-        // Redirect to login page after 2 seconds
-        setTimeout(() => {
-          window.location.href = "/auth/signin";
-        }, 2000);
+        // If code is valid, redirect to reset password page
+        router.push(
+          `/auth/reset-password?email=${encodeURIComponent(email)}&code=${code}`
+        );
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Unknown error");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error processing request");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md"
-      suppressHydrationWarning
-    >
-      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-        Password Recovery
-      </h2>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
-
-      {message && (
-        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
-          {message}
-        </div>
-      )}
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4"
-        suppressHydrationWarning
-      >
-        {step === "email" && (
-          <div suppressHydrationWarning>
+    <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {step === "email" ? (
+          <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700"
             >
-              Email
+              Email address
             </label>
-            <input
-              type="email"
-              id="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-              suppressHydrationWarning
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.email.message}
-              </p>
-            )}
+            <div className="mt-1">
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-gray-700"
+                placeholder="Enter your email"
+              />
+            </div>
           </div>
-        )}
-
-        {step === "code" && (
-          <div suppressHydrationWarning>
+        ) : (
+          <div>
             <label
               htmlFor="code"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700"
             >
               Recovery Code
             </label>
-            <input
-              type="text"
-              id="code"
-              {...register("code", {
-                required: "Recovery code is required",
-                pattern: {
-                  value: /^\d{6}$/,
-                  message: "Code must be 6 digits",
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-              placeholder="6-digit code"
-              suppressHydrationWarning
-            />
-            {errors.code && (
-              <p className="mt-1 text-sm text-red-600">{errors.code.message}</p>
-            )}
-            <p className="mt-2 text-sm text-gray-600">
+            <div className="mt-1">
+              <Input
+                id="code"
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+                disabled={isLoading}
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-gray-700"
+                placeholder="Enter the 6-digit code"
+              />
+            </div>
+            <p className="mt-2 text-sm text-gray-700">
               Enter the 6-digit code sent to your email
             </p>
           </div>
         )}
 
-        {step === "newPassword" && (
-          <div suppressHydrationWarning>
-            <label
-              htmlFor="newPassword"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              New Password
-            </label>
-            <input
-              type="password"
-              id="newPassword"
-              {...register("newPassword", {
-                required: "New password is required",
-                minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters",
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-              suppressHydrationWarning
-            />
-            {errors.newPassword && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.newPassword.message}
-              </p>
-            )}
-            <p className="mt-2 text-sm text-gray-600">
-              Enter your new password (minimum 8 characters)
-            </p>
-          </div>
+        {error && (
+          <Alert variant="destructive" className="text-sm text-gray-700">
+            {error}
+          </Alert>
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          suppressHydrationWarning
-        >
-          {isLoading
-            ? "Processing..."
-            : step === "email"
-              ? "Send Recovery Code"
-              : step === "code"
-                ? "Verify Code"
-                : "Change Password"}
-        </button>
+        {success && (
+          <Alert className="bg-green-50 border-green-200 text-sm text-gray-700">
+            {success}
+          </Alert>
+        )}
+
+        <div>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                <span className="text-white">
+                  {step === "email" ? "Sending..." : "Verifying..."}
+                </span>
+              </>
+            ) : (
+              <span className="text-white">
+                {step === "email" ? "Send Recovery Code" : "Verify Code"}
+              </span>
+            )}
+          </Button>
+        </div>
+
+        <div className="text-sm text-center">
+          <Link
+            href="/auth/signin"
+            className="font-medium text-gray-700 hover:text-gray-900"
+          >
+            Back to Sign In
+          </Link>
+        </div>
       </form>
     </div>
   );
