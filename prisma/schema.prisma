@@ -43,16 +43,15 @@ model Session {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String    @unique
-  password      String
-  instagramId   String    @default("")
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  password      String?
+  businessName  String?
   accounts      Account[]
   sessions      Session[]
   offers        Offer[]
+  customers     Customer[]
 }
 
 model VerificationToken {
@@ -64,17 +63,29 @@ model VerificationToken {
 }
 
 model Offer {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
-  benefits      String?  // JSON string of benefits array
-  price         Float
-  duration      String
-  isAIGenerated Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  duration    Int
+  imageUrl    String?
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordReset {

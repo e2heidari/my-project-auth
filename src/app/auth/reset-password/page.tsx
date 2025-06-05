@@ -87,7 +87,6 @@ export default function ResetPasswordPage() {
         throw new Error(data.error || "Failed to reset password");
       }
 
-      // Redirect to sign in page with success message
       router.push(
         "/auth/signin?message=Password reset successful. Please sign in with your new password."
       );
@@ -101,10 +100,10 @@ export default function ResetPasswordPage() {
   if (verifying) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md p-8">
+        <Card className="w-full max-w-md p-8 border-black">
           <div className="flex items-center justify-center space-x-2">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-700" />
-            <span className="text-gray-700">Verifying reset code...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-black" />
+            <span className="text-black">Verifying reset code...</span>
           </div>
         </Card>
       </div>
@@ -114,13 +113,13 @@ export default function ResetPasswordPage() {
   if (!email || !code || error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md p-8">
-          <Alert variant="destructive" className="mb-4">
+        <Card className="w-full max-w-md p-8 border-black">
+          <Alert variant="destructive" className="mb-4 text-black border-black">
             {error ||
               "Invalid reset link. Please request a new password reset."}
           </Alert>
           <Button
-            className="w-full"
+            className="w-full bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors duration-200"
             onClick={() => router.push("/auth/forgot-password")}
           >
             Request New Reset Link
@@ -132,15 +131,15 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md p-8">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-700">
+      <Card className="w-full max-w-md p-8 border-black">
+        <h1 className="text-2xl font-bold text-center mb-6 text-black">
           Reset Password
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="newPassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-black"
             >
               New Password
             </label>
@@ -151,13 +150,13 @@ export default function ResetPasswordPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter new password"
               required
-              className="mt-1 text-gray-700"
+              className="mt-1 text-black border-black focus:border-black focus:ring-black"
             />
           </div>
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-black"
             >
               Confirm Password
             </label>
@@ -168,17 +167,20 @@ export default function ResetPasswordPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
               required
-              className="mt-1 text-gray-700"
+              className="mt-1 text-black border-black focus:border-black focus:ring-black"
             />
           </div>
           {error && (
-            <Alert variant="destructive" className="mt-4 text-gray-700">
+            <Alert
+              variant="destructive"
+              className="mt-4 text-black border-black"
+            >
               {error}
             </Alert>
           )}
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors duration-200"
             disabled={loading}
           >
             {loading ? (

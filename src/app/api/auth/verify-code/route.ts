@@ -17,40 +17,53 @@ export async function POST(request: Request) {
 
   try {
     const { email, code } = await request.json();
+    console.log("Verifying code for:", { email, code });
 
     if (!email || !code) {
       return NextResponse.json(
-        { error: "Email and code are required" },
+        { error: "ایمیل و کد تایید الزامی هستند" },
         { status: 400, headers }
       );
     }
 
-    // Find the reset code
-    const resetRequest = await prisma.passwordReset.findFirst({
-      where: {
-        email,
-        code,
-        expiresAt: {
-          gt: new Date(),
+    // Check both verificationToken and passwordReset tables
+    const [verificationToken, passwordReset] = await Promise.all([
+      prisma.verificationToken.findFirst({
+        where: {
+          identifier: email,
+          token: code,
+          expires: {
+            gt: new Date(),
+          },
         },
-      },
-    });
+      }),
+      prisma.passwordReset.findFirst({
+        where: {
+          email,
+          code,
+          expiresAt: {
+            gt: new Date(),
+          },
+        },
+      }),
+    ]);
 
-    if (!resetRequest) {
+    if (!verificationToken && !passwordReset) {
+      console.log("Invalid or expired code:", { email, code });
       return NextResponse.json(
-        { error: "Invalid or expired code" },
+        { error: "کد تایید نامعتبر یا منقضی شده است" },
         { status: 400, headers }
       );
     }
 
     // Log the code verification
-    logger.info("Recovery code verified", {
+    logger.info("Verification code verified", {
       email,
       timestamp: new Date().toISOString(),
     });
 
     return NextResponse.json({
-      message: "Code verified successfully"
+      message: "کد تایید با موفقیت تایید شد"
     }, { headers });
 
   } catch (error) {
@@ -60,7 +73,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { error: "Error processing request" },
+      { error: "خطا در تایید کد" },
       { status: 500, headers }
     );
   }

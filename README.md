@@ -34,4 +34,49 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
 # my-project-auth
+
+# Database Management Instructions
+
+## Important Commands
+
+### Safe Commands (Preserves Data)
+
+```bash
+# Update database schema without losing data
+npx prisma db push
+
+# Generate Prisma Client
+npx prisma generate
+
+# View database in Prisma Studio
+npx prisma studio
+```
+
+### Dangerous Commands (Will Delete Data)
+
+```bash
+# ⚠️ DANGEROUS: Resets database and deletes all data
+npx prisma db push --force-reset
+
+# ⚠️ DANGEROUS: Drops all tables and recreates them
+npx prisma migrate reset
+```
+
+## Backup Instructions
+
+1. Run the backup script before any major database changes:
+
+```bash
+./backup.sh
+```
+
+2. Backups are stored in the `backups` directory with timestamps.
+
+## Best Practices
+
+1. Always create a backup before making schema changes
+2. Never use `--force-reset` in production
+3. Test schema changes in development first
+4. Keep regular backups of your database

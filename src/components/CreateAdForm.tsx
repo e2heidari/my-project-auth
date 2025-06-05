@@ -280,6 +280,15 @@ export default function CreateAdForm() {
     }
   };
 
+  useEffect(() => {
+    // Clean up localStorage when component unmounts
+    return () => {
+      localStorage.removeItem("adFormData");
+      localStorage.removeItem("adGeneratedText");
+      localStorage.removeItem("adShowPreview");
+    };
+  }, []);
+
   return (
     <div className="max-w-2xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-gray-700">

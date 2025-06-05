@@ -1,5 +1,4 @@
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./db";
@@ -13,6 +12,7 @@ declare module "next-auth" {
       email: string;
       name?: string | null;
       image?: string | null;
+      businessName?: string | null;
     };
   }
   interface User {
@@ -20,23 +20,13 @@ declare module "next-auth" {
     email: string;
     name?: string | null;
     image?: string | null;
+    businessName?: string | null;
   }
 }
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
-    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -73,6 +63,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             image: user.image,
+            businessName: user.businessName,
           };
         } catch (error) {
           console.error("Auth error:", error);
@@ -90,66 +81,24 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/error"
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      console.log("SignIn callback:", { user, account, profile });
-      
-      if (account?.provider === "google") {
-        try {
-          if (!user.email) {
-            console.error("No email provided by Google");
-            return false;
-          }
-
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email }
-          });
-
-          if (!existingUser) {
-            console.log("Creating new user for Google sign-in");
-            const newUser = await prisma.user.create({
-              data: {
-                email: user.email,
-                name: user.name || "",
-                image: user.image || "",
-                password: "", // Empty password for Google users
-                instagramId: ""
-              }
-            });
-            user.id = newUser.id;
-          } else {
-            console.log("Found existing user:", existingUser.email);
-            user.id = existingUser.id;
-          }
-          return true;
-        } catch (error) {
-          console.error("Google sign in error:", error);
-          return false;
-        }
-      }
-      return true;
-    },
-    async jwt({ token, user, account }) {
-      console.log("JWT callback:", { token, user, account });
-      
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
         token.picture = user.image;
+        token.businessName = user.businessName;
       }
-      
       return token;
     },
     async session({ session, token }) {
-      console.log("Session callback:", { session, token });
-      
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
         session.user.image = token.picture as string;
+        session.user.businessName = token.businessName as string;
       }
-      
       return session;
     }
   },

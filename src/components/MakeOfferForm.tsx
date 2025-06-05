@@ -79,6 +79,14 @@ export default function MakeOfferForm() {
     }
   }, [generatedOffer]);
 
+  useEffect(() => {
+    // Clean up localStorage when component unmounts
+    return () => {
+      localStorage.removeItem("offerFormData");
+      localStorage.removeItem("generatedOffer");
+    };
+  }, []);
+
   const generateOffer = async (): Promise<void> => {
     try {
       // Basic validation
@@ -365,7 +373,9 @@ export default function MakeOfferForm() {
                   value={generatedOffer}
                   onChange={(e) => setGeneratedOffer(e.target.value)}
                   rows={4}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 font-vazirmatn"
+                  dir="rtl"
+                  style={{ unicodeBidi: "bidi-override" }}
                 />
                 <div className="flex gap-4">
                   <button

@@ -1,0 +1,2 @@
+# Run database backup daily at 2 AM
+0 2 * * * cd /Users/ehsanheidari/my-project-auth && ./auto_backup.sh 

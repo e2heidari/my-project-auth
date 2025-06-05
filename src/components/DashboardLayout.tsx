@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { signOut } from "next-auth/react";
+import { useState, useRef, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import {
   FiHome,
   FiPlusCircle,
   FiSettings,
   FiHelpCircle,
-  FiLogOut,
   FiMenu,
   FiX,
 } from "react-icons/fi";
+import SignOutButton from "./SignOutButton";
 import MakeOfferForm from "./MakeOfferForm";
 import CreateAdForm from "@/components/CreateAdForm";
 import ManageAds from "@/components/ManageAds";
@@ -21,27 +20,24 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeContent, setActiveContent] = useState<
     "dashboard" | "make-offer" | "create-ad" | "manage"
   >("dashboard");
-  const profileRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    function handleClickOutside(event: MouseEvent) {
       if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
       ) {
-        setIsProfileOpen(false);
+        setIsSidebarOpen(false);
       }
-    };
+    }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleContentChange = (content: typeof activeContent) => {
@@ -52,7 +48,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const getHeaderText = () => {
     switch (activeContent) {
       case "dashboard":
-        return "Business Dashboard";
+        return "Dashboard";
       case "make-offer":
         return "Make Offer";
       case "create-ad":
@@ -60,16 +56,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       case "manage":
         return "Manage Offers & Ads";
       default:
-        return "Business Dashboard";
+        return "Dashboard";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <Toaster position="top-right" />
 
       {/* Fixed Header Container */}
-      <div className="fixed top-0 left-0 right-0 h-16 bg-gray-50 z-50 shadow-sm">
+      <div className="fixed top-0 left-0 right-0 h-16 bg-white z-50 shadow-sm">
         {/* Mobile Burger Menu Button */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -84,55 +80,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Header Text */}
         <div
-          className={`fixed top-4 left-16 md:left-72 z-[60] bg-gray-50 px-4 py-2 rounded-md transition-opacity duration-300 ${
-            isSidebarOpen ? "opacity-0 md:opacity-100" : "opacity-100"
-          }`}
+          className={`fixed top-4 left-16 md:left-72 z-[60] bg-white px-4 py-2 rounded-md transition-opacity duration-300 ${isSidebarOpen ? "opacity-0 md:opacity-100" : "opacity-100"}`}
         >
           <span className="text-xl font-semibold text-gray-800">
             {getHeaderText()}
           </span>
         </div>
 
-        {/* Business Icon in Top Right Corner */}
-        <div className="fixed top-4 right-4 z-[60]" ref={profileRef}>
-          <button
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center focus:outline-none"
-          >
-            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-indigo-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-          </button>
-
-          {/* Dropdown Menu */}
-          {isProfileOpen && (
-            <div className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-[70]">
-              <button
-                onClick={() => signOut()}
-                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <FiLogOut className="mr-2" />
-                Sign Out
-              </button>
-            </div>
-          )}
+        {/* Sign Out Button */}
+        <div className="fixed top-4 right-4 z-[60]">
+          <SignOutButton />
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex pt-16">
         {/* Sidebar - Mobile Overlay */}
         <div
@@ -144,6 +104,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Sidebar */}
         <aside
+          ref={sidebarRef}
           className={`fixed inset-y-0 left-0 transform ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0 transition duration-300 ease-in-out z-40 w-64 bg-white shadow-sm h-[calc(100vh-4rem)]`}

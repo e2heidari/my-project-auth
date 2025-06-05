@@ -1,192 +1,365 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
-export default function SignUp() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+export default function SignUpPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [step, setStep] = useState<"email" | "verification" | "password">(
+    "email"
+  );
+  const router = useRouter();
 
-  const handleGoogleSignUp = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await signIn("google", { callbackUrl: "/dashboard" });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred. Please try again.";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth/send-verification-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ email, businessName }),
       });
+
+      const data = await response.json();
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Something went wrong");
+        throw new Error(data.error || "Failed to send verification code");
       }
 
-      // Sign in the user after successful registration
-      const result = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
-      router.push("/dashboard");
+      setStep("verification");
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred. Please try again.";
-      setError(errorMessage);
+      setError(
+        err instanceof Error ? err.message : "Failed to send verification code"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Invalid verification code");
+      }
+
+      setStep("password");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Invalid verification code"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-        </div>
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-        {error && (
-          <div className="text-red-500 text-sm text-center">{error}</div>
-        )}
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          businessName,
+          verificationCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sign up");
+      }
+
+      router.push(
+        "/auth/signin?message=Account created successfully. Please sign in."
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign up");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "email") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md p-8 border-black">
+          <h1 className="text-2xl font-bold text-center mb-6 text-black">
+            Create Account
+          </h1>
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="sr-only">
-                Name
+              <label
+                htmlFor="businessName"
+                className="block text-sm font-medium text-black"
+              >
+                Business Name
               </label>
-              <input
-                id="name"
-                name="name"
+              <Input
+                id="businessName"
                 type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="Enter your business name"
                 required
-                value={formData.name}
-                onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Name"
+                className="mt-1 text-black border-black focus:border-black focus:ring-black"
               />
             </div>
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-black"
+              >
+                Email
               </label>
-              <input
+              <Input
                 id="email"
-                name="email"
                 type="email"
-                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 required
-                value={formData.email}
-                onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                className="mt-1 text-black border-black focus:border-black focus:ring-black"
               />
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
+            {error && (
+              <Alert
+                variant="destructive"
+                className="mt-4 text-black border-black"
+              >
+                {error}
+              </Alert>
+            )}
+            <Button
               type="submit"
+              className="w-full bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors duration-200"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              {loading ? "Creating account..." : "Sign up with Email"}
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <button
-              onClick={handleGoogleSignUp}
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                  <span className="text-white">Sending Code...</span>
+                </>
+              ) : (
+                <span className="text-white">Send Verification Code</span>
+              )}
+            </Button>
+          </form>
+          <div className="mt-4 text-center">
+            <Button
+              variant="link"
+              className="text-blue-600 hover:text-blue-700"
+              onClick={() => router.push("/auth/signin")}
             >
-              Sign up with Google
-            </button>
+              Already have an account? Sign In
+            </Button>
           </div>
-        </div>
-
-        <div className="text-sm text-center">
-          <Link
-            href="/auth/signin"
-            className="font-medium text-indigo-600 hover:text-indigo-500"
-          >
-            Already have an account? Sign in
-          </Link>
-        </div>
+        </Card>
       </div>
+    );
+  }
+
+  if (step === "verification") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md p-8 border-black">
+          <h1 className="text-2xl font-bold text-center mb-6 text-black">
+            Verify Email
+          </h1>
+          <form onSubmit={handleVerificationSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="verificationCode"
+                className="block text-sm font-medium text-black"
+              >
+                Verification Code
+              </label>
+              <Input
+                id="verificationCode"
+                type="text"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder="Enter verification code"
+                required
+                className="mt-1 text-black border-black focus:border-black focus:ring-black"
+              />
+            </div>
+            {error && (
+              <Alert
+                variant="destructive"
+                className="mt-4 text-black border-black"
+              >
+                {error}
+              </Alert>
+            )}
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors duration-200"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                  <span className="text-white">Verifying...</span>
+                </>
+              ) : (
+                <span className="text-white">Verify Code</span>
+              )}
+            </Button>
+          </form>
+          <div className="mt-4 text-center">
+            <Button
+              variant="link"
+              className="text-blue-600 hover:text-blue-700"
+              onClick={() => setStep("email")}
+            >
+              Back to Email
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md p-8 border-black">
+        <h1 className="text-2xl font-bold text-center mb-6 text-black">
+          Complete Registration
+        </h1>
+        <form onSubmit={handleSignUp} className="space-y-4">
+          <div>
+            <label
+              htmlFor="businessName"
+              className="block text-sm font-medium text-black"
+            >
+              Business Name
+            </label>
+            <Input
+              id="businessName"
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="Enter your business name"
+              required
+              className="mt-1 text-black border-black focus:border-black focus:ring-black"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-black"
+            >
+              Password
+            </label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              required
+              className="mt-1 text-black border-black focus:border-black focus:ring-black"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-black"
+            >
+              Confirm Password
+            </label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm password"
+              required
+              className="mt-1 text-black border-black focus:border-black focus:ring-black"
+            />
+          </div>
+          {error && (
+            <Alert
+              variant="destructive"
+              className="mt-4 text-black border-black"
+            >
+              {error}
+            </Alert>
+          )}
+          <Button
+            type="submit"
+            className="w-full bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors duration-200"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                <span className="text-white">Creating Account...</span>
+              </>
+            ) : (
+              <span className="text-white">Create Account</span>
+            )}
+          </Button>
+        </form>
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            className="text-blue-600 hover:text-blue-700"
+            onClick={() => setStep("verification")}
+          >
+            Back to Verification
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }
