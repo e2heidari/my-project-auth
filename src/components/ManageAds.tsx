@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { FiSearch, FiEdit2, FiTrash2 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 interface Offer {
   id: string;
@@ -11,6 +12,7 @@ interface Offer {
   description: string;
   status: "active" | "pending" | "completed";
   createdAt: string;
+  userId: string;
 }
 
 interface Advertisement {
@@ -156,21 +158,14 @@ function FilterDropdown({ value, onChange }: FilterDropdownProps) {
 }
 
 export default function ManageAds() {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<"offers" | "ads">("offers");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
     "active" | "pending" | "completed" | ""
   >("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [offers, setOffers] = useState<Offer[]>([
-    {
-      id: "1",
-      title: "Special Offer for New Customers",
-      description: "Get 20% off on your first purchase",
-      status: "active",
-      createdAt: "2024-03-20",
-    },
-  ]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [ads, setAds] = useState<Advertisement[]>([
     {
       id: "1",
@@ -181,6 +176,32 @@ export default function ManageAds() {
       createdAt: "2024-03-20",
     },
   ]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const response = await fetch("/api/offers");
+        if (!response.ok) {
+          throw new Error("Failed to fetch offers");
+        }
+        const data = await response.json();
+        // Filter offers to ensure we only show the current user's offers
+        const userOffers = data.offers.filter(
+          (offer: Offer) => offer.userId === session?.user?.id
+        );
+        setOffers(userOffers);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch offers");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (session?.user?.id) {
+      fetchOffers();
+    }
+  }, [session?.user?.id]);
 
   // Filter items based on search term and status
   const filteredItems =
@@ -250,6 +271,14 @@ export default function ManageAds() {
     // TODO: Implement edit functionality
     toast.success("Edit functionality coming soon!");
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
 
   return (
     <div className="space-y-6">

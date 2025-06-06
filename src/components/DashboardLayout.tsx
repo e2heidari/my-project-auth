@@ -14,12 +14,14 @@ import SignOutButton from "./SignOutButton";
 import MakeOfferForm from "./MakeOfferForm";
 import CreateAdForm from "@/components/CreateAdForm";
 import ManageAds from "@/components/ManageAds";
+import { useSession } from "next-auth/react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { data: session } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeContent, setActiveContent] = useState<
     "dashboard" | "make-offer" | "create-ad" | "manage"
@@ -41,9 +43,38 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, []);
 
   const handleContentChange = (content: typeof activeContent) => {
+    // Save current form data before switching
+    if (activeContent === "make-offer" && session?.user?.id) {
+      const offerFormData = localStorage.getItem(
+        `offerFormData_${session.user.id}`
+      );
+      if (offerFormData) {
+        // Keep the data in localStorage with the user-specific key
+        localStorage.setItem(`offerFormData_${session.user.id}`, offerFormData);
+      }
+    } else if (activeContent === "create-ad" && session?.user?.id) {
+      const adFormData = localStorage.getItem(`adFormData_${session.user.id}`);
+      if (adFormData) {
+        // Keep the data in localStorage with the user-specific key
+        localStorage.setItem(`adFormData_${session.user.id}`, adFormData);
+      }
+    }
+
+    // No need to move data between different keys, just keep it in the user-specific key
     setActiveContent(content);
     setIsSidebarOpen(false);
   };
+
+  // Add cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up localStorage when component unmounts
+      if (session?.user?.id) {
+        localStorage.removeItem(`offerFormData_${session.user.id}`);
+        localStorage.removeItem(`adFormData_${session.user.id}`);
+      }
+    };
+  }, [session?.user?.id]);
 
   const getHeaderText = () => {
     switch (activeContent) {

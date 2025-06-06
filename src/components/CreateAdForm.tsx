@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 export interface AdFormData {
   title: string;
@@ -14,21 +15,25 @@ export interface AdFormData {
 }
 
 export default function CreateAdForm() {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [generatedText, setGeneratedText] = useState<string>("");
   const [formData, setFormData] = useState<AdFormData>(() => {
     // Load saved data from localStorage if it exists
-    if (typeof window !== "undefined") {
-      const savedData = localStorage.getItem("adFormData");
-      const savedGeneratedText = localStorage.getItem("adGeneratedText");
-      const savedShowPreview = localStorage.getItem("adShowPreview");
+    if (typeof window !== "undefined" && session?.user?.id) {
+      const savedData = localStorage.getItem(`adFormData_${session.user.id}`);
+      const savedGeneratedText = localStorage.getItem(
+        `adGeneratedText_${session.user.id}`
+      );
+      const savedShowPreview = localStorage.getItem(
+        `adShowPreview_${session.user.id}`
+      );
 
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          // Convert string dates back to dayjs objects
           return {
             ...parsedData,
             imageFile: null, // We can't store File objects in localStorage
@@ -60,18 +65,36 @@ export default function CreateAdForm() {
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && session?.user?.id) {
       localStorage.setItem(
-        "adFormData",
+        `adFormData_${session.user.id}`,
         JSON.stringify({
           ...formData,
           imageFile: null, // Don't store File objects
         })
       );
-      localStorage.setItem("adGeneratedText", generatedText);
-      localStorage.setItem("adShowPreview", showPreview.toString());
+      localStorage.setItem(`adGeneratedText_${session.user.id}`, generatedText);
+      localStorage.setItem(
+        `adShowPreview_${session.user.id}`,
+        showPreview.toString()
+      );
     }
-  }, [formData, generatedText, showPreview]);
+  }, [formData, generatedText, showPreview, session?.user?.id]);
+
+  // Cleanup effect with proper dependencies
+  useEffect(() => {
+    const userId = session?.user?.id;
+    const isSubmitting = isLoading;
+
+    return () => {
+      // Only clean up if we're actually submitting the form
+      if (userId && !isSubmitting) {
+        // localStorage.removeItem(`adFormData_${userId}`);
+        // localStorage.removeItem(`adGeneratedText_${userId}`);
+        // localStorage.removeItem(`adShowPreview_${userId}`);
+      }
+    };
+  }, []); // Empty dependency array since we're using closure values
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -242,11 +265,12 @@ export default function CreateAdForm() {
     });
     setGeneratedText("");
     setShowPreview(false);
+
     // Clear localStorage
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("adFormData");
-      localStorage.removeItem("adGeneratedText");
-      localStorage.removeItem("adShowPreview");
+    if (typeof window !== "undefined" && session?.user?.id) {
+      localStorage.removeItem(`adFormData_${session.user.id}`);
+      localStorage.removeItem(`adGeneratedText_${session.user.id}`);
+      localStorage.removeItem(`adShowPreview_${session.user.id}`);
     }
   };
 
@@ -262,16 +286,9 @@ export default function CreateAdForm() {
       // TODO: Implement ad submission API call here
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert("Advertisement created successfully!");
-      setFormData({
-        title: "",
-        description: "",
-        targetPage: "",
-        imageFile: null,
-        imageDescription: "",
-        generatedImage: null,
-        uploadedImageUrl: null,
-      });
-      setShowPreview(false);
+
+      // Only clear the form data after successful submission
+      handleReset();
     } catch (error) {
       console.error("Error creating advertisement:", error);
       alert("Failed to create advertisement. Please try again.");
@@ -279,15 +296,6 @@ export default function CreateAdForm() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    // Clean up localStorage when component unmounts
-    return () => {
-      localStorage.removeItem("adFormData");
-      localStorage.removeItem("adGeneratedText");
-      localStorage.removeItem("adShowPreview");
-    };
-  }, []);
 
   return (
     <div className="max-w-2xl mx-auto">

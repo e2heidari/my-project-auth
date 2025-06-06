@@ -6,6 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/en";
+import { useSession } from "next-auth/react";
 
 interface OfferFormData {
   goal: string;
@@ -18,6 +19,7 @@ interface OfferFormData {
 }
 
 export default function MakeOfferForm() {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [generatedOffer, setGeneratedOffer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +27,10 @@ export default function MakeOfferForm() {
 
   const [formData, setFormData] = useState<OfferFormData>(() => {
     // Try to load saved form data from localStorage
-    if (typeof window !== "undefined") {
-      const savedFormData = localStorage.getItem("offerFormData");
+    if (typeof window !== "undefined" && session?.user?.id) {
+      const savedFormData = localStorage.getItem(
+        `offerFormData_${session.user.id}`
+      );
       if (savedFormData) {
         try {
           const parsed = JSON.parse(savedFormData);
@@ -54,38 +58,47 @@ export default function MakeOfferForm() {
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && session?.user?.id) {
       const dataToSave = {
         ...formData,
         startDate: formData.startDate?.toISOString() || null,
         endDate: formData.endDate?.toISOString() || null,
       };
-      localStorage.setItem("offerFormData", JSON.stringify(dataToSave));
+      localStorage.setItem(
+        `offerFormData_${session.user.id}`,
+        JSON.stringify(dataToSave)
+      );
     }
-  }, [formData]);
+  }, [formData, session?.user?.id]);
 
   // Load saved offer from localStorage on component mount
   useEffect(() => {
-    const savedOffer = localStorage.getItem("generatedOffer");
-    if (savedOffer) {
-      setGeneratedOffer(savedOffer);
+    if (session?.user?.id) {
+      const savedOffer = localStorage.getItem(
+        `generatedOffer_${session.user.id}`
+      );
+      if (savedOffer) {
+        setGeneratedOffer(savedOffer);
+      }
     }
-  }, []);
+  }, [session?.user?.id]);
 
   // Save offer to localStorage when it changes
   useEffect(() => {
-    if (generatedOffer) {
-      localStorage.setItem("generatedOffer", generatedOffer);
+    if (generatedOffer && session?.user?.id) {
+      localStorage.setItem(`generatedOffer_${session.user.id}`, generatedOffer);
     }
-  }, [generatedOffer]);
+  }, [generatedOffer, session?.user?.id]);
 
+  // Clean up localStorage when component unmounts
   useEffect(() => {
-    // Clean up localStorage when component unmounts
     return () => {
-      localStorage.removeItem("offerFormData");
-      localStorage.removeItem("generatedOffer");
+      if (session?.user?.id) {
+        // Don't remove the data when unmounting, as we want to keep it for when the user returns
+        // localStorage.removeItem(`offerFormData_${session.user.id}`);
+      }
     };
-  }, []);
+  }, [session?.user?.id]);
 
   const generateOffer = async (): Promise<void> => {
     try {
@@ -175,6 +188,21 @@ export default function MakeOfferForm() {
 
   const handleSave = () => {
     setIsEditing(false);
+  };
+
+  const handleReset = () => {
+    setFormData({
+      goal: "",
+      discountType: "",
+      productOrService: "",
+      customMessage: "",
+      category: "",
+      startDate: null,
+      endDate: null,
+    });
+    if (session?.user?.id) {
+      localStorage.removeItem(`offerFormData_${session.user.id}`);
+    }
   };
 
   return (
@@ -353,13 +381,22 @@ export default function MakeOfferForm() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          >
-            {isLoading ? "✨ Generating..." : "✨ Generate Offer"}
-          </button>
+          <div className="flex gap-4 mt-6">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {isLoading ? "✨ Generating..." : "✨ Generate Offer"}
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+            >
+              Reset Form
+            </button>
+          </div>
         </form>
 
         {generatedOffer && (
