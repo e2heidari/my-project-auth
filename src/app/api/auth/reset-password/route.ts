@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({
-      message: 'رمز عبور با موفقیت تغییر کرد'
+      message: 'Password reset successful. Please sign in with your new password.'
     }, { headers });
 
   } catch (error) {

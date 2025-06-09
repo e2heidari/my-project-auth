@@ -90,7 +90,7 @@ export default function SubscriptionPlans() {
         <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
           Choose Your Plan
         </h2>
-        <p className="mt-4 text-xl text-gray-600">
+        <p className="mt-4 text-xl text-gray-700">
           Select the perfect plan for your business needs
         </p>
       </div>

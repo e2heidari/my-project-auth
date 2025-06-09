@@ -431,13 +431,24 @@ export default function CreateAdForm() {
           >
             {formData.imageFile ? "Change Image" : "Upload Your Own Image"}
           </label>
-          <input
-            type="file"
-            id="imageUpload"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="mt-1 block w-full"
-          />
+          <div className="mt-1">
+            <input
+              type="file"
+              id="imageUpload"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <label
+              htmlFor="imageUpload"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              Choose File
+            </label>
+            <span className="ml-3 text-sm text-gray-500">
+              {formData.imageFile ? formData.imageFile.name : "No file chosen"}
+            </span>
+          </div>
         </div>
 
         <div className="flex justify-end space-x-4">

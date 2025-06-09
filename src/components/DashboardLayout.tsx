@@ -3,12 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { FiMenu, FiX } from "react-icons/fi";
-import Link from "next/link";
 import SignOutButton from "./SignOutButton";
 import MakeOfferForm from "./MakeOfferForm";
 import CreateAdForm from "@/components/CreateAdForm";
 import ManageAds from "@/components/ManageAds";
 import { useSession } from "next-auth/react";
+import SubscriptionManagement from "./SubscriptionManagement";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,7 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeContent, setActiveContent] = useState<
-    "dashboard" | "make-offer" | "create-ad" | "manage"
+    "dashboard" | "make-offer" | "create-ad" | "manage" | "subscription"
   >("dashboard");
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +80,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         return "Create Advertisement";
       case "manage":
         return "Manage Offers & Ads";
+      case "subscription":
+        return "Subscription";
       default:
         return "Dashboard";
     }
@@ -231,9 +233,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               Manage
             </button>
 
-            <Link
-              href="/subscription"
-              className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            <button
+              onClick={() => handleContentChange("subscription")}
+              className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                activeContent === "subscription"
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
             >
               <svg
                 className="mr-3 h-6 w-6"
@@ -249,17 +255,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 />
               </svg>
               Subscription
-            </Link>
+            </button>
           </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 md:ml-64 min-h-screen">
-          <div className="w-full px-4 py-6 md:px-6 md:max-w-7xl md:mx-auto">
-            {activeContent === "dashboard" && children}
-            {activeContent === "make-offer" && <MakeOfferForm />}
-            {activeContent === "create-ad" && <CreateAdForm />}
-            {activeContent === "manage" && <ManageAds />}
+        <main className="flex-1 md:ml-64">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+              {activeContent === "dashboard" && children}
+              {activeContent === "make-offer" && <MakeOfferForm />}
+              {activeContent === "create-ad" && <CreateAdForm />}
+              {activeContent === "manage" && <ManageAds />}
+              {activeContent === "subscription" && <SubscriptionManagement />}
+            </div>
           </div>
         </main>
       </div>

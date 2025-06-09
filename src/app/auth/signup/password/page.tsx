@@ -60,8 +60,10 @@ export default function SetPasswordPage() {
         throw new Error(data.error || "Failed to create account");
       }
 
-      // Redirect to dashboard after successful signup
-      router.push("/dashboard");
+      // Redirect to signin with success message
+      router.push(
+        "/auth/signin?message=Account created successfully. Please sign in with your new password."
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account");
     } finally {

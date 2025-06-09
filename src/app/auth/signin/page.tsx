@@ -55,7 +55,7 @@ export default function SignInPage() {
           Sign In
         </h1>
         {message && (
-          <Alert className="mb-4 bg-white text-black border-black">
+          <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
             {message}
           </Alert>
         )}

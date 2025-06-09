@@ -86,7 +86,7 @@ export default function ManageOffersPage() {
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="text-xl font-semibold mb-2">{offer.title}</h2>
-                <p className="text-gray-600 mb-2">{offer.description}</p>
+                <p className="text-gray-700 mb-2">{offer.description}</p>
                 <div className="flex gap-4 text-sm text-gray-500">
                   <span>Price: ${offer.price}</span>
                   <span>Duration: {offer.duration}</span>
