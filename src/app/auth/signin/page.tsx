@@ -49,9 +49,9 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md p-8 border-black">
-        <h1 className="text-2xl font-bold text-center mb-6 text-black">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <Card className="w-full max-w-sm p-4 sm:p-8 border-black">
+        <h1 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6 text-black">
           Sign In
         </h1>
         {message && (
@@ -61,7 +61,7 @@ export default function SignInPage() {
         )}
         <form
           onSubmit={handleSubmit}
-          className="space-y-4"
+          className="space-y-3 sm:space-y-4"
           suppressHydrationWarning
         >
           <div>
@@ -134,19 +134,19 @@ export default function SignInPage() {
             )}
           </Button>
         </form>
-        <div className="mt-4 text-center">
+        <div className="mt-3 sm:mt-4 text-center">
           <Button
             variant="link"
-            className="text-blue-600 hover:text-blue-700"
+            className="text-blue-600 hover:text-blue-700 text-sm sm:text-base"
             onClick={() => router.push("/auth/forgot-password")}
           >
             Forgot Password?
           </Button>
         </div>
-        <div className="mt-4 text-center">
+        <div className="mt-3 sm:mt-4 text-center">
           <Button
             variant="link"
-            className="text-blue-600 hover:text-blue-700"
+            className="text-blue-600 hover:text-blue-700 text-sm sm:text-base"
             onClick={() => router.push("/auth/signup")}
           >
             Don&apos;t have an account? Sign Up

@@ -2,14 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import {
-  FiHome,
-  FiPlusCircle,
-  FiSettings,
-  FiHelpCircle,
-  FiMenu,
-  FiX,
-} from "react-icons/fi";
+import { FiMenu, FiX } from "react-icons/fi";
+import Link from "next/link";
 import SignOutButton from "./SignOutButton";
 import MakeOfferForm from "./MakeOfferForm";
 import CreateAdForm from "@/components/CreateAdForm";
@@ -136,84 +130,137 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Sidebar */}
         <aside
           ref={sidebarRef}
-          className={`fixed inset-y-0 left-0 transform ${
+          className={`fixed top-16 bottom-0 left-0 transform ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 transition duration-300 ease-in-out z-40 w-64 bg-white shadow-sm h-[calc(100vh-4rem)]`}
+          } md:translate-x-0 transition duration-300 ease-in-out z-40 w-64 bg-white shadow-sm`}
         >
-          <nav className="mt-5 px-2">
+          <nav className="space-y-1">
             <button
               onClick={() => handleContentChange("dashboard")}
-              className={`w-full group flex items-center px-2 py-2 text-base font-medium rounded-md ${
+              className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${
                 activeContent === "dashboard"
-                  ? "bg-indigo-50 text-indigo-600"
+                  ? "bg-gray-100 text-gray-900"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <FiHome className="mr-3 h-5 w-5" />
+              <svg
+                className="mr-3 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
               Dashboard
             </button>
 
             <button
               onClick={() => handleContentChange("make-offer")}
-              className={`w-full group flex items-center px-2 py-2 text-base font-medium rounded-md mt-2 ${
+              className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${
                 activeContent === "make-offer"
-                  ? "bg-indigo-50 text-indigo-600"
+                  ? "bg-gray-100 text-gray-900"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <FiPlusCircle className="mr-3 h-5 w-5" />
+              <svg
+                className="mr-3 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
               Make Offer
             </button>
 
             <button
               onClick={() => handleContentChange("create-ad")}
-              className={`w-full group flex items-center px-2 py-2 text-base font-medium rounded-md mt-2 ${
+              className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${
                 activeContent === "create-ad"
-                  ? "bg-indigo-50 text-indigo-600"
+                  ? "bg-gray-100 text-gray-900"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <FiPlusCircle className="mr-3 h-5 w-5" />
-              Create Advertisement
+              <svg
+                className="mr-3 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              Create Ad
             </button>
 
             <button
               onClick={() => handleContentChange("manage")}
-              className={`w-full group flex items-center px-2 py-2 text-base font-medium rounded-md mt-2 ${
+              className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${
                 activeContent === "manage"
-                  ? "bg-indigo-50 text-indigo-600"
+                  ? "bg-gray-100 text-gray-900"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <FiSettings className="mr-3 h-5 w-5" />
-              Manage Offers & Ads
+              <svg
+                className="mr-3 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
+              </svg>
+              Manage
             </button>
 
-            <div className="mt-8 pt-8 border-t border-gray-200">
-              <button className="w-full group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-                <FiHelpCircle className="mr-3 h-5 w-5" />
-                Help & Support
-              </button>
-            </div>
+            <Link
+              href="/subscription"
+              className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            >
+              <svg
+                className="mr-3 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+                />
+              </svg>
+              Subscription
+            </Link>
           </nav>
         </aside>
 
-        {/* Main Content Area */}
-        <main className="flex-1 md:ml-64 p-6">
-          {activeContent === "make-offer" ? (
-            <MakeOfferForm />
-          ) : activeContent === "create-ad" ? (
-            <CreateAdForm />
-          ) : activeContent === "manage" ? (
-            <ManageAds />
-          ) : (
-            <div className="max-w-7xl mx-auto">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-8">
-                Welcome to Your Dashboard
-              </h1>
-              {children}
-            </div>
-          )}
+        {/* Main Content */}
+        <main className="flex-1 md:ml-64 min-h-screen">
+          <div className="w-full px-4 py-6 md:px-6 md:max-w-7xl md:mx-auto">
+            {activeContent === "dashboard" && children}
+            {activeContent === "make-offer" && <MakeOfferForm />}
+            {activeContent === "create-ad" && <CreateAdForm />}
+            {activeContent === "manage" && <ManageAds />}
+          </div>
         </main>
       </div>
     </div>

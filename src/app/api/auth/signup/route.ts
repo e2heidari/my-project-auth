@@ -10,10 +10,10 @@ export async function POST(request: Request) {
       password: "***" // Hide password in logs
     });
 
-    const { businessName, email, password, verificationCode } = body;
+    const { email, password, verificationCode } = body;
 
-    if (!businessName || !email || !password || !verificationCode) {
-      console.log("Missing fields:", { businessName, email, password: !!password, verificationCode });
+    if (!email || !password || !verificationCode) {
+      console.log("Missing fields:", { email, password: !!password, verificationCode });
       return NextResponse.json(
         { error: "تمام فیلدها الزامی هستند" },
         { status: 400 }
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         data: {
           email,
           password: hashedPassword,
-          businessName,
+          businessName: (verificationToken as unknown as { businessName: string }).businessName,
         },
       });
 
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         user: {
           id: user.id,
           email: user.email,
-          businessName: user.name,
+          businessName: user.businessName,
         },
       });
     } catch (dbError) {
@@ -103,18 +103,9 @@ export async function POST(request: Request) {
       throw dbError; // Re-throw to be caught by outer catch
     }
   } catch (error) {
-    console.error("Error in signup:", error);
-    
-    if (error instanceof Error) {
-      console.error("Error details:", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      });
-    }
-
+    console.error("Unexpected error:", error);
     return NextResponse.json(
-      { error: "خطا در ثبت نام. لطفاً دوباره تلاش کنید." },
+      { error: "خطا در ثبت نام" },
       { status: 500 }
     );
   }
